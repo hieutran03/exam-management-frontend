@@ -1,5 +1,5 @@
 import { Routes, Route } from "react-router-dom";
-import { Home, Login, Register, NotFound } from "@/pages";
+import { Home, Exams, Login, Register, NotFound, Questions } from "@/pages";
 import { DefaultLayout } from "@/layout";
 
 function App() {
@@ -9,6 +9,8 @@ function App() {
 			<Route path="/auth/register" element={<Register />} />
 			<Route path="/" element={<DefaultLayout />}>
 				<Route index element={<Home />} />
+				<Route path="/exams" element={<Exams />} />
+				<Route path="/questions" element={<Questions />} />
 			</Route>
 			<Route path="*" element={<NotFound />} />
 		</Routes>
