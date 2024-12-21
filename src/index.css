@@ -89,4 +89,8 @@
 		-ms-overflow-style: none; /* IE and Edge */
 		scrollbar-width: none; /* Firefox */
 	}
+
+	.grid-cols-13 {
+		grid-template-columns: repeat(13, minmax(0, 1fr));
+	}
 }

@@ -7,7 +7,7 @@ const DefaultLayout = () => {
 			<Sidebar />
 			<SidebarInset>
 				<Header />
-				<div className="h-full">
+				<div className="h-full p-4 md:p-6 xl:p-8">
 					<Outlet />
 				</div>
 			</SidebarInset>
