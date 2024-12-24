@@ -2,7 +2,6 @@ import * as React from "react";
 import { useLocation } from "react-router-dom";
 import {
 	BookOpenCheck,
-	Bot,
 	FilePenLine,
 	GraduationCap,
 	MessageCircleQuestion,
@@ -18,21 +17,11 @@ import {
 import { Logo } from ".";
 
 const data = {
-	user: {
-		name: "shadcn",
-		email: "m@example.com",
-		avatar: "/avatars/shadcn.jpg",
-	},
 	navMain: [
 		{
 			title: "Score",
 			url: "/",
 			icon: FilePenLine,
-		},
-		{
-			title: "Classes",
-			url: "/classes",
-			icon: Bot,
 		},
 		{
 			title: "Teachers",
@@ -68,7 +57,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 				<NavMain items={navMainWithActive} />
 			</SidebarContent>
 			<SidebarFooter>
-				<NavUser user={data.user} />
+				<NavUser />
 			</SidebarFooter>
 		</Sidebar>
 	);

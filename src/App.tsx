@@ -1,5 +1,15 @@
 import { Routes, Route } from "react-router-dom";
-import { Home, Exams, Login, Register, NotFound, Questions } from "@/pages";
+import {
+	Home,
+	Exams,
+	Login,
+	Register,
+	NotFound,
+	Questions,
+	Teachers,
+	TeacherDetail,
+	RoleDetail,
+} from "@/pages";
 import { DefaultLayout } from "@/layout";
 import { AuthProtect } from "@/routes";
 
@@ -17,7 +27,9 @@ function App() {
 				}
 			>
 				<Route index element={<Home />} />
-
+				<Route path="/teachers" element={<Teachers />} />
+				<Route path="/teachers/:teacherId" element={<TeacherDetail />} />
+				<Route path="/teachers/role/:roleId" element={<RoleDetail />} />
 				<Route path="/exams" element={<Exams />} />
 				<Route path="/questions" element={<Questions />} />
 			</Route>

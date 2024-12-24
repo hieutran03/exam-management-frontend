@@ -9,3 +9,11 @@ interface Role {
 	name: string;
 	permissions: string[];
 }
+
+export interface Teacher {
+	id: number;
+	name: string;
+	username: string;
+	role_id: number;
+	role_name: string;
+}

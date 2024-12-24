@@ -11,4 +11,7 @@ export { default as Loading } from "./Loading";
 export { columnsQuestion } from "./QuestionColumn";
 export { default as QuestionTable } from "./QuestionTable";
 
+export { default as TeacherTable } from "./TeacherTable";
+export { columnsTeacher } from "./TeacherColumn";
+
 export { default as Header } from "./Header";

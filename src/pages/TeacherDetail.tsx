@@ -1,237 +1,317 @@
-import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { mockTeachersDetails,TeachersWithDetailsModel } from '@/models/teacher/teacherModelDetail';
+import { Button } from "@/components/ui/button";
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { update } from "@/context/services/auth";
+import { RootState } from "@/context/store";
+import { Role, User } from "@/interface";
+import customAxios from "@/lib/customAxios";
+import { Icons } from "@/lib/icon";
+import { Check, Ellipsis, X } from "lucide-react";
+import { ElementRef, useEffect, useRef, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useParams } from "react-router-dom";
 
 const TeacherDetail = () => {
-  const { id } = useParams(); 
-  const [teacher, setTeacher] = useState<TeachersWithDetailsModel | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editForm, setEditForm] = useState<TeachersWithDetailsModel | null>(null);
-//   const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    const getTeacherDetail =  () => {
-      try {
-        var idNumber=Number.parseInt(id!)||"1";
-        const data = mockTeachersDetails.find(e=>e.id==idNumber); 
-        setEditForm(data!);
-        setTeacher(data!);
-      } catch (error) {
-        console.error('Error fetching teacher details:', error);
-      }
-    };
+	const [teacher, setTeacher] = useState<User>({
+		id: 0,
+		name: "",
+		username: "",
+		role: {
+			name: "",
+			permissions: [],
+		},
+	});
+	const [roles, setRoles] = useState<Role[]>([]);
+	const [teacherName, setTeacherName] = useState<string>("");
+	const [visible, setVisible] = useState<boolean>(false);
+	const [isEditing, setIsEditing] = useState<boolean>(false);
+	const inputRef = useRef<ElementRef<"input">>(null);
+	const { teacherId } = useParams<{ teacherId: string }>();
 
-    getTeacherDetail();
- }, [id]);
+	const currentUser = useSelector((state: RootState) => state.auth.user);
+	const dispatch = useDispatch();
 
-//   useEffect(() => {
-//     const getTeacherDetail = async () => {
-//       try {
-//         const data = await fetchTeacherById(Number(id)); // Fetch data by ID
-//         setTeacher(data);
-//         setLoading(false);
-//       } catch (error) {
-//         console.error('Error fetching teacher details:', error);
-//         setLoading(false);
-//       }
-//     };
-//
-//     getTeacherDetail();
-//   }, [id]);
+	useEffect(() => {
+		const getRoles = async () => {
+			try {
+				const response = await customAxios.get("/roles");
 
-//   if (loading) return <p>Loading...</p>;
+				if (response.status === 200) {
+					setRoles(response.data);
+				}
+			} catch (error: any) {
+				console.log(error.message);
+			}
+		};
 
-//   if (!teacher) return <p>No teacher found!</p>;
+		getRoles();
+	}, []);
 
+	useEffect(() => {
+		const getTeacherDetail = async () => {
+			try {
+				const response = await customAxios.get(
+					`/teachers/${teacherId}/details`,
+				);
 
-const handleEdit = () => {
-  setIsEditing(true);
-};
+				if (response.status === 200) {
+					setTeacher({
+						id: response.data.id,
+						name: response.data.name,
+						username: response.data.username,
+						role: {
+							name: response.data.role_name,
+							permissions: response.data.rolePermission.permissions,
+						},
+					});
 
-const handleCancel = () => {
-  setIsEditing(false);
-  setEditForm(teacher); // Reset lại form về dữ liệu ban đầu
-};
+					setTeacherName(response.data.name);
+				}
+			} catch (error: any) {
+				console.error(error);
+			}
+		};
 
-const handleSave = () => {
+		getTeacherDetail();
+	}, [teacherId]);
 
-  console.log('Saving data:', editForm);
-  setTeacher(editForm); // 
-  setIsEditing(false);
-};
+	useEffect(() => {
+		const handleClickOutside = (event: MouseEvent) => {
+			if (
+				visible &&
+				event.target instanceof Node &&
+				!(event.target as Element).closest(".role-dropdown")
+			) {
+				setVisible(false);
+			}
+		};
 
-const handleInputChange = (e:any) => {
-  const { name, value } = e.target;
-  setEditForm({ ...editForm, [name]: value });
-};
+		document.addEventListener("mousedown", handleClickOutside);
+		return () => {
+			document.removeEventListener("mousedown", handleClickOutside);
+		};
+	}, [visible]);
 
-const handleDelete = () => {
-  if (window.confirm('Are you sure you want to delete this teacher?')) {
-    alert(`Delete teacher ${teacher?.name}`);
-  }
-};
+	const enableEditing = () => {
+		setIsEditing(true);
+		setTimeout(() => {
+			inputRef.current?.focus();
+		});
+	};
+	const disableEditing = () => {
+		setIsEditing(false);
+	};
 
-if (!teacher) return <p>No teacher found!</p>;
+	const handleRoleChange = async (roleId: number) => {
+		try {
+			const response = await customAxios.patch(`/teachers/${teacherId}`, {
+				role_id: roleId,
+			});
 
-return (
-  <div style={{ fontFamily: 'Arial, sans-serif', padding: '20px', textAlign: 'center'}}>
-    <div
-      style={{
-        maxWidth: '600px',
-        margin: '20px auto',
-        padding: '20px',
-        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
-        borderRadius: '10px',
-        backgroundColor: '#f9f9f9',
-      }}
-    >
-    
+			if (response.status === 200) {
+				setTeacher(
+					(prev) =>
+						prev && {
+							...prev,
+							role: {
+								name: response.data.rolePermission.name,
+								permissions: response.data.rolePermission.permissions,
+							},
+						},
+				);
+				if (currentUser.id === teacher.id) {
+					dispatch(
+						update({
+							user: {
+								id: currentUser.id,
+								name: currentUser.name,
+								username: currentUser.username,
+								role: {
+									name: response.data.rolePermission.name,
+									permissions: response.data.rolePermission.permissions,
+								},
+							},
+						}),
+					);
+				}
+				setVisible(false);
+			}
+		} catch (error: any) {
+			console.error(error);
+		}
+	};
 
-      {isEditing ? (
-        <div>
-        <label
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            marginBottom: '10px',
-          }}
-        >
-          <strong style={{ width: '100px' }}>Name:</strong>
-          <input
-            type="text"
-            name="name"
-            value={editForm?.name}
-            onChange={handleInputChange}
-            style={{
-              padding: '5px',
-              flex: 1,
-              border: '1px solid #ccc',
-              borderRadius: '4px',
-            }}
-          />
-        </label>
-        <label
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            marginBottom: '10px',
-          }}
-        >
-          <strong style={{ width: '100px' }}>Role:</strong>
-          <input
-            type="text"
-            name="role_name"
-            value={editForm?.role_name}
-            onChange={handleInputChange}
-            style={{
-              padding: '5px',
-              flex: 1,
-              border: '1px solid #ccc',
-              borderRadius: '4px',
-            }}
-          />
-        </label>
-        <label
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            marginBottom: '10px',
-          }}
-        >
-          <strong style={{ width: '100px' }}>Password:</strong>
-          <input
-            type="text"
-            name="password"
-            value={editForm?.password}
-            onChange={handleInputChange}
-            style={{
-              padding: '5px',
-              flex: 1,
-              border: '1px solid #ccc',
-              borderRadius: '4px',
-            }}
-          />
-        </label>
-        <div style={{ marginTop: '20px' }}>
-          <button
-            onClick={handleSave}
-            style={{
-              padding: '10px 20px',
-              backgroundColor: '#28a745',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: 'pointer',
-              marginRight: '10px',
-            }}
-          >
-            Save
-          </button>
-          <button
-            onClick={handleCancel}
-            style={{
-              padding: '10px 20px',
-              backgroundColor: '#6c757d',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: 'pointer',
-            }}
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-      
-      ) : (
-        <div>
-          <p>
-            <strong>Name:</strong> {teacher?.name || 'Not found'}
-          </p>
-          <p>
-            <strong>Username:</strong> {teacher?.username || 'Not found'}
-          </p>
-          <p>
-            <strong>Role:</strong> {teacher?.role_name || 'Not found'}
-          </p>
-          <p>
-            <strong>Password:</strong> {teacher?.password || 'Not provided'}
-          </p>
-          <p>
-            <strong>Created At:</strong> {teacher?.created_at|| 'Not provided'}
-          </p>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '20px' }}>
-          <button
-            onClick={handleEdit}
-            style={{
-              padding: '10px 20px',
-              backgroundColor: '#007BFF',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: 'pointer',
-            }}
-          >
-            Edit
-          </button>
-          <button
-            onClick={handleDelete}
-            style={{
-              padding: '10px 20px',
-              backgroundColor: '#FF4D4F',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: 'pointer',
-            }}
-          >
-            Delete
-          </button>
-        </div>
-        </div>
-      )}
-    </div>
-  </div>
-);
+	const handleNameChange = async (name: string) => {
+		try {
+			const response = await customAxios.patch(`/teachers/${teacherId}`, {
+				name,
+			});
+
+			if (response.status === 200) {
+				setTeacher((prev) => prev && { ...prev, name });
+				if (currentUser?.id === teacher.id) {
+					dispatch(
+						update({
+							user: {
+								id: currentUser.id,
+								name,
+								username: currentUser.username,
+								role: {
+									name: currentUser.role.name,
+									permissions: currentUser.role.permissions,
+								},
+							},
+						}),
+					);
+				}
+				setIsEditing(false);
+			}
+		} catch (error: any) {
+			console.error(error);
+		}
+	};
+
+	return (
+		<div className="w-full">
+			<div className="flex items-center justify-between">
+				<div className="flex items-center gap-x-4">
+					<div className="w-14 h-14 relative">
+						<Icons.logo className="w-full h-full rounded-md  bg-slate-200 dark:bg-slate-700" />
+					</div>
+					<div className="space-y-1">
+						<p className="font-medium text-xl">Teachers</p>
+						<div className="flex items-center">
+							<p className="text-sm text-muted-foreground font-medium italic">
+								10 teachers
+							</p>
+						</div>
+					</div>
+				</div>
+				<div className="flex items-center gap-x-4">
+					<Button variant="secondary" size={"icon"}>
+						<Ellipsis className="w-5 h-5" />
+					</Button>
+				</div>
+			</div>
+			<Separator className="my-4" />
+			<div className="flex flex-col gap-y-4">
+				<Card className="sm:mx-auto sm:w-full sm:max-w-md">
+					<CardHeader className="space-y-1">
+						<CardDescription className="text-center text-xl font-bold tracking-tight text-gray-700 ">
+							Teacher Details
+						</CardDescription>
+					</CardHeader>
+					<CardContent className="grid gap-4 py-2">
+						<div className="flex flex-col gap-y-2">
+							<Label className="text-base font-medium italic">
+								Teacher Username
+							</Label>
+
+							<Button variant={"ghost"} className="justify-start">
+								{teacher?.username}
+							</Button>
+						</div>
+						<div className="flex flex-col gap-y-2">
+							<Label className="text-base font-medium italic">
+								Teacher Name
+							</Label>
+							{isEditing ? (
+								<div className="rounded-md bg-white relative">
+									<Input
+										ref={inputRef}
+										defaultValue={teacher?.name}
+										onChange={(e) => setTeacherName(e.target.value)}
+										type="text"
+										name="inputValue"
+										className="p-[11px] rounded-md border border-gray-300 focus-visible:outline-none"
+									/>
+									<div className="absolute right-0 z-99 -bottom-7 flex items-center gap-x-1">
+										<Button
+											onClick={disableEditing}
+											variant={"outline"}
+											className="size-7"
+										>
+											<X className="w-5 h-5" />
+										</Button>
+										<Button
+											onClick={() => handleNameChange(teacherName)}
+											variant={"outline"}
+											className="size-7"
+										>
+											<Check className="w-5 h-5" />
+										</Button>
+									</div>
+								</div>
+							) : (
+								<Button
+									onClick={enableEditing}
+									variant={"ghost"}
+									className="justify-start"
+								>
+									{teacher?.name}
+								</Button>
+							)}
+						</div>
+						<div className="flex flex-col gap-y-2 relative">
+							<Label className="text-base font-medium italic">
+								Teacher Role
+							</Label>
+
+							<Button
+								onClick={() => {
+									setVisible(!visible);
+								}}
+								variant={"ghost"}
+								className="justify-start"
+							>
+								{teacher?.role.name}
+							</Button>
+
+							{visible && (
+								<div className="absolute top-[75px] z-10 w-full bg-white rounded-md shadow-md p-2 space-y-1 border role-dropdown">
+									{roles
+										.filter((role) => role.name !== teacher?.role.name)
+										.map((role) => (
+											<div
+												className="font-medium italic px-2 py-1 hover:bg-gray-100 transition cursor-pointer rounded-md"
+												key={role.id}
+												onClick={() => handleRoleChange(role.id)}
+											>
+												{role.name}
+											</div>
+										))}
+								</div>
+							)}
+						</div>
+						<div className="flex flex-col gap-y-2 relative">
+							<Label className="text-base font-medium italic">
+								Permissions
+							</Label>
+
+							<div className="flex flex-wrap gap-x-1">
+								{teacher?.role.permissions.map((permission) => (
+									<Button
+										key={permission}
+										variant={"ghost"}
+										className="justify-start"
+									>
+										{permission.replace(/_/g, " ")}
+									</Button>
+								))}
+							</div>
+						</div>
+					</CardContent>
+				</Card>
+			</div>
+		</div>
+	);
 };
 
 export default TeacherDetail;
