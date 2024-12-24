@@ -24,6 +24,7 @@ const TeacherDetail = () => {
 		name: "",
 		username: "",
 		role: {
+			id: 0,
 			name: "",
 			permissions: [],
 		},
@@ -67,6 +68,7 @@ const TeacherDetail = () => {
 						name: response.data.name,
 						username: response.data.username,
 						role: {
+							id: response.data.role_id,
 							name: response.data.role_name,
 							permissions: response.data.rolePermission.permissions,
 						},
@@ -121,6 +123,7 @@ const TeacherDetail = () => {
 						prev && {
 							...prev,
 							role: {
+								...prev.role,
 								name: response.data.rolePermission.name,
 								permissions: response.data.rolePermission.permissions,
 							},
@@ -134,6 +137,7 @@ const TeacherDetail = () => {
 								name: currentUser.name,
 								username: currentUser.username,
 								role: {
+									id: response.data.rolePermission.id,
 									name: response.data.rolePermission.name,
 									permissions: response.data.rolePermission.permissions,
 								},
@@ -164,6 +168,7 @@ const TeacherDetail = () => {
 								name,
 								username: currentUser.username,
 								role: {
+									id: currentUser.role.id,
 									name: currentUser.role.name,
 									permissions: currentUser.role.permissions,
 								},
@@ -187,11 +192,6 @@ const TeacherDetail = () => {
 					</div>
 					<div className="space-y-1">
 						<p className="font-medium text-xl">Teachers</p>
-						<div className="flex items-center">
-							<p className="text-sm text-muted-foreground font-medium italic">
-								10 teachers
-							</p>
-						</div>
 					</div>
 				</div>
 				<div className="flex items-center gap-x-4">

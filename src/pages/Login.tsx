@@ -68,6 +68,7 @@ const Login = () => {
 							name: response.data.name,
 							username: response.data.username,
 							role: {
+								id: response.data.rolePermission.id,
 								name: response.data.rolePermission.name,
 								permissions: response.data.rolePermission.permissions,
 							},

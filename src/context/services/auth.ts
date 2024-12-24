@@ -37,7 +37,7 @@ export const authSlice = createSlice({
 					id: 0,
 					name: "",
 					username: "",
-					role: { name: "", permissions: [] },
+					role: { id: 0, name: "", permissions: [] },
 				},
 			};
 		},
@@ -52,6 +52,15 @@ export const authSlice = createSlice({
 				user: action.payload.user,
 			};
 			localStorage.setItem("user", JSON.stringify(action.payload.user));
+
+			if (state.user.role.id === action.payload.user.role.id) {
+				const updatedUser = {
+					...state.user,
+					role: action.payload.user.role,
+				};
+				localStorage.setItem("user", JSON.stringify(updatedUser));
+				newState.user = updatedUser;
+			}
 
 			return newState;
 		},

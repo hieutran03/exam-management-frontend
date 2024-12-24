@@ -89,7 +89,7 @@ const Teachers = () => {
 						<p className="font-medium text-xl">Teachers</p>
 						<div className="flex items-center">
 							<p className="text-sm text-muted-foreground font-medium italic">
-								10 teachers
+								{teachers.length} teachers
 							</p>
 						</div>
 					</div>
