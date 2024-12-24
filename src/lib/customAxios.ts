@@ -7,8 +7,8 @@ import axios, {
 } from "axios";
 
 const customAxios: AxiosInstance = axios.create({
-	baseURL: "http://192.168.1.42:3000",
-	// withCredentials: true, // Changed from false to true
+	baseURL: "http://localhost:3000",
+	withCredentials: true, // Changed from false to true
 });
 
 customAxios.interceptors.request.use(

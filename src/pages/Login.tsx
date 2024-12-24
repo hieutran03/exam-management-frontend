@@ -60,15 +60,22 @@ const Login = () => {
 			setTimeout(() => {
 				dispatch(hideLoader());
 			}, 1000);
-			console.log(response);
-			// if (response.status === 200) {
-			// 	dispatch(
-			// 		login({
-			// 			user: response.data.user,
-			// 		}),
-			// 	);
-			// 	navigate("/");
-			// }
+			if (response.status === 200) {
+				dispatch(
+					login({
+						user: {
+							id: response.data.id,
+							name: response.data.name,
+							username: response.data.username,
+							role: {
+								name: response.data.rolePermission.name,
+								permissions: response.data.rolePermission.permissions,
+							},
+						},
+					}),
+				);
+				navigate("/");
+			}
 		} catch (error: any) {
 			setTimeout(() => {
 				dispatch(hideLoader());

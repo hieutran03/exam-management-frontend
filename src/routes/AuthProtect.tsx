@@ -5,7 +5,6 @@ import { RootState } from "@/context/store";
 const AuthProtect = ({ children }: { children: React.ReactNode }) => {
 	const auth = useSelector((state: RootState) => state.auth);
 	function IsAuthenticated() {
-		console.log(auth.user);
 		if (auth.user) {
 			return true;
 		}
