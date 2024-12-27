@@ -1,4 +1,6 @@
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+
 import {
 	Card,
 	CardContent,
@@ -91,6 +93,16 @@ const RoleDetail = () => {
 
 	const handleSave = async () => {
 		try {
+			if (role.name === "") {
+				toast.error("Please enter a role name");
+				return;
+			}
+
+			if (role.permissions.length === 0) {
+				toast.error("Please select at least one permission");
+				return;
+			}
+
 			const response = await customAxios.put(`/roles/${roleId}`, {
 				name: role.name,
 				permissions: role.permissions,
@@ -103,7 +115,7 @@ const RoleDetail = () => {
 					permissions: response.data.permissions,
 				});
 				setIsEditing(false);
-
+				toast.success("Role updated successfully");
 				if (currentUser.role.id === response.data.id) {
 					dispatch(
 						update({
@@ -121,6 +133,7 @@ const RoleDetail = () => {
 			}
 		} catch (error: any) {
 			console.log(error.message);
+			toast.error("Role update failed");
 		}
 	};
 

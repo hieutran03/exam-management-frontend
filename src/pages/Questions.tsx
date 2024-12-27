@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
 import { Icons } from "@/lib/icon";
 import {
@@ -204,6 +205,16 @@ const ModalQuestion = ({
 
 	const addQuestion = async () => {
 		try {
+			if (questionTitle.trim() === "") {
+				toast.error("Question title is required.");
+				return;
+			}
+
+			if (selectedCourse === 0) {
+				toast.error("Course is required.");
+				return;
+			}
+
 			const response = await customAxios.post("/questions", {
 				content: questionTitle,
 				question_level_id: levels.find((level) => level.name === questionLevel)
@@ -214,9 +225,11 @@ const ModalQuestion = ({
 
 			if (response.status === 201) {
 				onClose();
+				toast.success("Question added successfully.");
 			}
 		} catch (error: any) {
 			console.log(error.message);
+			toast.error("An error occurred.");
 		}
 	};
 

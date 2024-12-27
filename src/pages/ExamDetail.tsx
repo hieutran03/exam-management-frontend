@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -51,6 +52,10 @@ const ExamDetail = () => {
 	const [selectedSemester, setSelectedSemester] = useState<number>(0);
 	const [selectedCourse, setSelectedCourse] = useState<number>(0);
 	const [selectedQuestions, setSelectedQuestions] = useState<number[]>([]);
+
+	const [parameters, setParameters] = useState<
+		{ id: number; name: string; value: number }[]
+	>([]);
 
 	useEffect(() => {
 		const getQuestionDetail = async () => {
@@ -110,6 +115,19 @@ const ExamDetail = () => {
 			}
 		};
 
+		const getParameters = async () => {
+			try {
+				const response = await customAxios.get("/parameter");
+
+				if (response.status === 200) {
+					setParameters(response.data);
+				}
+			} catch (error: any) {
+				console.error(error);
+			}
+		};
+
+		getParameters();
 		getCourses();
 		getSemester();
 	}, []);
@@ -194,6 +212,44 @@ const ExamDetail = () => {
 
 	const handleSave = async () => {
 		try {
+			if (
+				!exam.examDate ||
+				!exam.time ||
+				!selectedCourse ||
+				!selectedSemester
+			) {
+				toast.error("Please fill all fields.");
+				return;
+			}
+
+			if (selectedQuestions.length === 0) {
+				toast.error("Please select at least one question.");
+				return;
+			}
+
+			const maxExamQuestion = parameters.find(
+				(p) => p.name === "max_exam_question",
+			);
+			if (maxExamQuestion && selectedQuestions.length > maxExamQuestion.value) {
+				toast.error(
+					`You can select a maximum of ${maxExamQuestion.value} questions.`,
+				);
+				return;
+			}
+
+			const maxExamTime = parameters.find((p) => p.name === "max_exam_time");
+			const minExamTime = parameters.find((p) => p.name === "min_exam_time");
+
+			if (maxExamTime && exam.time > maxExamTime.value) {
+				toast.error(`Maximum exam time is ${maxExamTime.value} minutes.`);
+				return;
+			}
+
+			if (minExamTime && exam.time < minExamTime.value) {
+				toast.error(`Minimum exam time is ${minExamTime.value} minutes.`);
+				return;
+			}
+
 			const user = await customAxios.get("/auth/my-profile");
 
 			const url = user.data.rolePermission.permissions.includes(
@@ -213,9 +269,11 @@ const ExamDetail = () => {
 
 			if (response.status === 200) {
 				setIsEditing(false);
+				toast.success("Exam updated successfully.");
 			}
 		} catch (error: any) {
 			console.log(error.message);
+			toast.error("Failed to update exam.");
 		}
 	};
 
@@ -272,7 +330,9 @@ const ExamDetail = () => {
 									variant={"ghost"}
 									className="justify-start"
 								>
-									{exam.course ? exam.course : "Select Course"}
+									{selectedCourse
+										? courses.find((c) => c.id === selectedCourse)?.name
+										: "Select course"}
 								</Button>
 								{visibleCourses && (
 									<div className="absolute top-[65px] max-h-[136px] overflow-y-auto z-10 w-full bg-white rounded-md shadow-md p-2 space-y-1 border role-dropdown">

@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -146,6 +147,11 @@ const TeacherDetail = () => {
 
 	const handleRoleChange = async (roleId: number) => {
 		try {
+			if (roleId === 0) {
+				toast.error("Please select a role");
+				return;
+			}
+
 			const response = await customAxios.patch(`/teachers/${teacherId}`, {
 				role_id: roleId,
 			});
@@ -179,14 +185,21 @@ const TeacherDetail = () => {
 					);
 				}
 				setVisible(false);
+				toast.success("Role updated successfully");
 			}
 		} catch (error: any) {
 			console.error(error);
+			toast.error("Failed to update role");
 		}
 	};
 
 	const handleNameChange = async (name: string) => {
 		try {
+			if (name === "") {
+				toast.error("Please enter a name");
+				return;
+			}
+
 			const response = await customAxios.patch(`/teachers/${teacherId}`, {
 				name,
 			});
@@ -210,9 +223,11 @@ const TeacherDetail = () => {
 					);
 				}
 				setIsEditing(false);
+				toast.success("Name updated successfully");
 			}
 		} catch (error: any) {
 			console.error(error);
+			toast.error("Failed to update name");
 		}
 	};
 

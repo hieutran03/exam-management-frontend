@@ -1,4 +1,5 @@
 import { ColumnDef } from "@tanstack/react-table";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
@@ -147,10 +148,12 @@ export const columnsTeacher: ColumnDef<Teacher>[] = [
 						);
 
 						if (response.status === 204) {
+							toast.success("Teacher deleted successfully!");
 							navigate("/teachers");
 						}
 					} catch (error: any) {
 						console.log(error.message);
+						toast.error("Failed to delete teacher!");
 					}
 				};
 

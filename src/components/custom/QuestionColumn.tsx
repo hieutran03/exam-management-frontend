@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import {
@@ -168,9 +169,11 @@ export const columnsQuestion: ColumnDef<Question>[] = [
 
 						if (response.status === 200) {
 							navigate("/questions");
+							toast.success("Question deleted successfully!");
 						}
 					} catch (error: any) {
 						console.error(error);
+						toast.error("An error occurred while deleting the question!");
 					}
 				};
 

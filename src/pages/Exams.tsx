@@ -1,5 +1,6 @@
 import { CustomModal, ExamTable } from "@/components/custom";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import {
 	Command,
 	CommandEmpty,
@@ -26,6 +27,9 @@ import { useEffect, useState } from "react";
 const Exams = () => {
 	const [exams, setExams] = useState<Exam[]>([]);
 	const [openModalExam, setOpenModalExam] = useState<boolean>(false);
+	const [parameters, setParameters] = useState<
+		{ id: number; name: string; value: number }[]
+	>([]);
 	const [user, setUser] = useState<User>({
 		id: 0,
 		name: "",
@@ -77,7 +81,20 @@ const Exams = () => {
 			}
 		};
 
+		const getParameters = async () => {
+			try {
+				const response = await customAxios.get("/parameter");
+
+				if (response.status === 200) {
+					setParameters(response.data);
+				}
+			} catch (error: any) {
+				console.error(error);
+			}
+		};
+
 		getExams();
+		getParameters();
 	}, []);
 
 	return (
@@ -91,7 +108,7 @@ const Exams = () => {
 						<p className="font-medium text-xl">Exams</p>
 						<div className="flex items-center">
 							<p className="text-sm text-muted-foreground font-medium italic">
-								10 exams
+								{exams.length} exams
 							</p>
 						</div>
 					</div>
@@ -113,6 +130,7 @@ const Exams = () => {
 				open={openModalExam}
 				onClose={() => setOpenModalExam(false)}
 				user={user}
+				parameters={parameters}
 			/>
 		</div>
 	);
@@ -124,10 +142,12 @@ const ModalExams = ({
 	open,
 	onClose,
 	user,
+	parameters,
 }: {
 	open: boolean;
 	onClose: () => void;
 	user: User;
+	parameters: { id: number; name: string; value: number }[];
 }) => {
 	const [courses, setCourses] = useState<{ id: number; name: string }[]>([]);
 	const [semesters, setSemesters] = useState<
@@ -239,6 +259,39 @@ const ModalExams = ({
 
 	const addExam = async () => {
 		try {
+			if (!examDate || !examTime || !selectedCourse || !selectedSemester) {
+				toast.error("Please fill all fields.");
+				return;
+			}
+
+			if (selectedQuestions.length === 0) {
+				toast.error("Please select at least one question.");
+				return;
+			}
+
+			const maxExamQuestion = parameters.find(
+				(p) => p.name === "max_exam_question",
+			);
+			if (maxExamQuestion && selectedQuestions.length > maxExamQuestion.value) {
+				toast.error(
+					`You can select a maximum of ${maxExamQuestion.value} questions.`,
+				);
+				return;
+			}
+
+			const maxExamTime = parameters.find((p) => p.name === "max_exam_time");
+			const minExamTime = parameters.find((p) => p.name === "min_exam_time");
+
+			if (maxExamTime && examTime > maxExamTime.value) {
+				toast.error(`Maximum exam time is ${maxExamTime.value} minutes.`);
+				return;
+			}
+
+			if (minExamTime && examTime < minExamTime.value) {
+				toast.error(`Minimum exam time is ${minExamTime.value} minutes.`);
+				return;
+			}
+
 			const response = await customAxios.post("/exams", {
 				exam_date: examDate,
 				time: examTime,
@@ -250,9 +303,11 @@ const ModalExams = ({
 
 			if (response.status === 201) {
 				onClose();
+				toast.success("Exam added successfully.");
 			}
 		} catch (error: any) {
 			console.error(error);
+			toast.error("An error occurred.");
 		}
 	};
 
@@ -384,7 +439,7 @@ const ModalExams = ({
 							Select questions
 						</Button>
 						{visibleQuestions && (
-							<div className="absolute top-[55px] z-10 w-full bg-white rounded-md shadow-md p-2 space-y-1 border role-dropdown">
+							<div className="absolute max-h-[150px] overflow-y-auto top-[55px] z-10 w-full bg-white rounded-md shadow-md p-2 space-y-1 border role-dropdown">
 								{questions.map((question) => (
 									<div
 										onClick={() => handleSelectQuestion(question.id)}

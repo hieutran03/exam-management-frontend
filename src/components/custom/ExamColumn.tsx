@@ -1,4 +1,5 @@
 import { ColumnDef } from "@tanstack/react-table";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
@@ -135,10 +136,12 @@ export const columnsExam: ColumnDef<Exam>[] = [
 						const response = await customAxios.delete(`${url}/${exam.id}`);
 
 						if (response.status === 200) {
+							toast.success("Exam deleted successfully");
 							navigate("/exams");
 						}
 					} catch (error: any) {
 						console.error(error);
+						toast.error("An error occurred while deleting the exam!");
 					}
 				};
 				return (

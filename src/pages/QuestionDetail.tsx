@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -102,6 +103,31 @@ const QuestionDetail = () => {
 		getQuestionDetail();
 	}, [questionId]);
 
+	useEffect(() => {
+		const handleClickOutside = (event: MouseEvent) => {
+			if (
+				visibleLevel &&
+				event.target instanceof Node &&
+				!(event.target as Element).closest(".role-dropdown")
+			) {
+				setVisibleLevel(false);
+			}
+
+			if (
+				visibleCourse &&
+				event.target instanceof Node &&
+				!(event.target as Element).closest(".role-dropdown")
+			) {
+				setVisibleCourse(false);
+			}
+		};
+
+		document.addEventListener("mousedown", handleClickOutside);
+		return () => {
+			document.removeEventListener("mousedown", handleClickOutside);
+		};
+	}, [visibleLevel, visibleCourse]);
+
 	const handleSave = async () => {
 		try {
 			const s = await customAxios.get("/auth/my-profile");
@@ -112,11 +138,6 @@ const QuestionDetail = () => {
 				? "/questions"
 				: "/my-questions";
 
-			console.log({
-				content: question.content,
-				course_id: courseId,
-				question_level_id: levelId,
-			});
 			const response = await customAxios.put(`${url}/${questionId}`, {
 				content: question.content,
 				course_id: courseId,
@@ -125,9 +146,11 @@ const QuestionDetail = () => {
 
 			if (response.status === 200) {
 				setIsEditing(false);
+				toast.success("Question updated successfully.");
 			}
 		} catch (error: any) {
 			console.log(error.message);
+			toast.error("An error occurred while updating the question.");
 		}
 	};
 
@@ -196,7 +219,9 @@ const QuestionDetail = () => {
 						</div>
 						<div className="flex flex-col gap-y-2">
 							<Label>Teacher</Label>
-							<div className="font-medium">{question.teacher}</div>
+							<Button variant={"ghost"} className="justify-start">
+								{question.teacher}
+							</Button>
 						</div>
 						<div className="flex flex-col gap-y-2 relative">
 							<Label>Course</Label>

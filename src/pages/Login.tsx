@@ -1,4 +1,6 @@
 import { Link, NavigateFunction, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -76,12 +78,14 @@ const Login = () => {
 					}),
 				);
 				navigate("/");
+				toast.success("Logged in successfully!");
 			}
 		} catch (error: any) {
 			setTimeout(() => {
 				dispatch(hideLoader());
 			}, 1000);
 			console.log(error);
+			toast.error("An error occurred while logging in!");
 		}
 	};
 

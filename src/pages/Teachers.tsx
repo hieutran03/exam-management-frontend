@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/lib/icon";
+import { toast } from "sonner";
 import { Separator } from "@radix-ui/react-separator";
 import {
 	Check,
@@ -149,7 +150,7 @@ const Teachers = () => {
 				<div className="sm:col-span-3">
 					<TeacherTable data={teachers} />
 				</div>
-				<div className="lg:col-span-1 px-4 mt-8">
+				<div className="lg:col-span-1 px-4 mt-7">
 					<Command className="border rounded-md">
 						<CommandInput placeholder="Search roles..." />
 						<CommandList>
@@ -220,7 +221,6 @@ const ModalRole = ({
 
 	const addRole = async () => {
 		try {
-			console.log(roleName);
 			if (roleName === "") {
 				throw new Error("Please enter role name");
 			}
@@ -239,9 +239,11 @@ const ModalRole = ({
 
 			if (response.status === 201) {
 				onClose();
+				toast.success("Role added successfully");
 			}
 		} catch (error: any) {
 			console.log(error.message);
+			toast.error(error.message);
 		}
 	};
 
@@ -323,6 +325,10 @@ const ModalTeacher = ({
 				throw new Error("Please enter teacher password");
 			}
 
+			if (selectedRole === 0) {
+				throw new Error("Please select a role");
+			}
+
 			const teacher = {
 				name: teacherName,
 				username: teacherUsername,
@@ -334,9 +340,11 @@ const ModalTeacher = ({
 
 			if (response.status === 201) {
 				onClose();
+				toast.success("Teacher added successfully");
 			}
 		} catch (error: any) {
 			console.log(error.message);
+			toast.error(error.message);
 		}
 	};
 
