@@ -21,12 +21,23 @@ import { Exam, Permission, Question, User } from "@/interface";
 import customAxios from "@/lib/customAxios";
 import { Icons } from "@/lib/icon";
 import { cn } from "@/lib/utils";
-import { Check, ChevronsUpDown, Ellipsis, FilePlus2 } from "lucide-react";
+import {
+	Check,
+	ChevronsUpDown,
+	Edit,
+	Ellipsis,
+	FilePlus2,
+	Triangle,
+	Check as CheckIcon,
+	X,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 
 const Exams = () => {
 	const [exams, setExams] = useState<Exam[]>([]);
 	const [openModalExam, setOpenModalExam] = useState<boolean>(false);
+	const [openModalParameters, setOpenModalParameters] =
+		useState<boolean>(false);
 	const [parameters, setParameters] = useState<
 		{ id: number; name: string; value: number }[]
 	>([]);
@@ -97,6 +108,10 @@ const Exams = () => {
 		getParameters();
 	}, []);
 
+	const isTeacherModify: boolean = user.role.permissions.includes(
+		Permission.TEACHER_MODIFY,
+	);
+
 	return (
 		<div className="w-full">
 			<div className="flex items-center justify-between">
@@ -114,6 +129,15 @@ const Exams = () => {
 					</div>
 				</div>
 				<div className="flex items-center gap-x-4">
+					{isTeacherModify && (
+						<Button
+							onClick={() => setOpenModalParameters(true)}
+							variant="ghost"
+						>
+							<Triangle className="w-5 h-5" />
+							Parameters
+						</Button>
+					)}
 					<Button onClick={() => setOpenModalExam(true)} variant="ghost">
 						<FilePlus2 className="w-5 h-5" />
 						Exam
@@ -130,6 +154,11 @@ const Exams = () => {
 				open={openModalExam}
 				onClose={() => setOpenModalExam(false)}
 				user={user}
+				parameters={parameters}
+			/>
+			<ModalParameters
+				open={openModalParameters}
+				onClose={() => setOpenModalParameters(false)}
 				parameters={parameters}
 			/>
 		</div>
@@ -257,10 +286,47 @@ const ModalExams = ({
 		});
 	};
 
+	const isDateWithinSemester = (
+		date: string,
+		semester: {
+			id: number;
+			semester: number;
+			first_year: string;
+			second_year: string;
+		},
+	) => {
+		const examDate = new Date(date);
+		let startDate, endDate;
+
+		if (semester.semester === 1) {
+			startDate = new Date(`${semester.first_year}-09-01`);
+			endDate = new Date(`${parseInt(semester.second_year) + 1}-01-31`);
+		} else if (semester.semester === 2) {
+			startDate = new Date(`${semester.second_year}-02-01`);
+			endDate = new Date(`${semester.second_year}-06-30`);
+		} else {
+			return false;
+		}
+
+		return examDate >= startDate && examDate <= endDate;
+	};
+
 	const addExam = async () => {
 		try {
 			if (!examDate || !examTime || !selectedCourse || !selectedSemester) {
 				toast.error("Please fill all fields.");
+				return;
+			}
+
+			const selectedSemesterObj = semesters.find(
+				(semester) => semester.id === selectedSemester,
+			);
+
+			if (
+				selectedSemesterObj &&
+				!isDateWithinSemester(examDate, selectedSemesterObj)
+			) {
+				toast.error("Exam date must be within the selected semester.");
 				return;
 			}
 
@@ -490,6 +556,109 @@ const ModalExams = ({
 					<div className="w-full flex items-center justify-end">
 						<Button onClick={addExam}>Add</Button>
 					</div>
+				</div>
+			</div>
+		</CustomModal>
+	);
+};
+
+const ModalParameters = ({
+	open,
+	onClose,
+	parameters,
+}: {
+	open: boolean;
+	onClose: () => void;
+	parameters: { id: number; name: string; value: number }[];
+}) => {
+	const [editingParameterId, setEditingParameterId] = useState<number | null>(
+		null,
+	);
+	const [parameterValues, setParameterValues] = useState<{
+		[key: number]: number;
+	}>({});
+
+	const handleEditClick = (id: number, value: number) => {
+		setEditingParameterId(id);
+		setParameterValues((prev) => ({ ...prev, [id]: value }));
+	};
+
+	const handleValueChange = (id: number, value: number) => {
+		setParameterValues((prev) => ({ ...prev, [id]: value }));
+	};
+
+	const handleSaveClick = async (id: number) => {
+		try {
+			const response = await customAxios.put(`/parameter/${id}`, {
+				value: parameterValues[id],
+			});
+
+			if (response.status === 200) {
+				toast.success("Parameter updated successfully.");
+				setEditingParameterId(null);
+			}
+		} catch (error: any) {
+			console.error(error);
+			toast.error("An error occurred.");
+		}
+	};
+
+	return (
+		<CustomModal size="w-[350px]" open={open} onClose={onClose}>
+			<div className="flex flex-col gap-4 w-full">
+				<h2 className="text-2xl">Level</h2>
+				<hr className="my-1" />
+				<div className="space-y-4">
+					{parameters.map((parameter) => (
+						<div
+							key={parameter.id}
+							className="flex items-center justify-between gap-x-4"
+						>
+							{editingParameterId === parameter.id ? (
+								<Input
+									type="number"
+									value={parameterValues[parameter.id]}
+									onChange={(e) =>
+										handleValueChange(parameter.id, parseInt(e.target.value))
+									}
+								/>
+							) : (
+								<p>
+									{parameter.name.replace(/_/g, " ")}: {parameter.value}
+								</p>
+							)}
+							<div className="flex items-center gap-x-2">
+								{editingParameterId === parameter.id ? (
+									<div className="flex items-center ga-x-2">
+										<Button
+											variant="ghost"
+											size={"icon"}
+											onClick={() => setEditingParameterId(null)}
+										>
+											<X className="w-4 h-4" />
+										</Button>
+										<Button
+											variant="ghost"
+											size={"icon"}
+											onClick={() => handleSaveClick(parameter.id)}
+										>
+											<CheckIcon className="w-4 h-4" />
+										</Button>
+									</div>
+								) : (
+									<Button
+										variant="ghost"
+										size={"icon"}
+										onClick={() =>
+											handleEditClick(parameter.id, parameter.value)
+										}
+									>
+										<Edit className="w-4 h-4" />
+									</Button>
+								)}
+							</div>
+						</div>
+					))}
 				</div>
 			</div>
 		</CustomModal>

@@ -5,10 +5,13 @@ import { Icons } from "@/lib/icon";
 import {
 	Check,
 	ChevronsUpDown,
+	Diamond,
 	DiamondPlus,
-	Download,
+	Edit,
 	Ellipsis,
 	MessageSquarePlus,
+	Trash,
+	X,
 } from "lucide-react";
 import { CustomModal, QuestionTable } from "@/components/custom";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -38,6 +41,7 @@ const Questions = () => {
 	const [levels, setLevels] = useState<{ id: number; name: string }[]>([]);
 	const [openModalLevel, setOpenModalLevel] = useState<boolean>(false);
 	const [openModalQuestion, setOpenModalQuestion] = useState<boolean>(false);
+	const [openModal, setOpenModal] = useState<boolean>(false);
 	const [user, setUser] = useState<User>({
 		id: 0,
 		name: "",
@@ -133,17 +137,20 @@ const Questions = () => {
 				</div>
 				<div className="flex items-center gap-x-4">
 					{isLevelModify && (
-						<Button onClick={() => setOpenModalLevel(true)} variant="ghost">
-							<DiamondPlus className="w-5 h-5" />
-							Level
-						</Button>
+						<>
+							<Button onClick={() => setOpenModal(true)} variant="ghost">
+								<Diamond className="w-5 h-5" />
+								Level
+							</Button>
+							<Button onClick={() => setOpenModalLevel(true)} variant="ghost">
+								<DiamondPlus className="w-5 h-5" />
+								Add Level
+							</Button>
+						</>
 					)}
 					<Button onClick={() => setOpenModalQuestion(true)} variant="ghost">
 						<MessageSquarePlus className="w-5 h-5" />
 						Question
-					</Button>
-					<Button variant="ghost" size={"icon"}>
-						<Download className="w-5 h-5" />
 					</Button>
 
 					<Button variant="secondary" size={"icon"}>
@@ -162,6 +169,12 @@ const Questions = () => {
 			<ModalQuestion
 				open={openModalQuestion}
 				onClose={() => setOpenModalQuestion(false)}
+				levels={levels}
+			/>
+
+			<Modal
+				open={openModal}
+				onClose={() => setOpenModal(false)}
 				levels={levels}
 			/>
 		</div>
@@ -363,12 +376,131 @@ const ModalLevel = ({
 							onChange={(e) => setLevelName(e.target.value)}
 							type="text"
 							id="firstName"
-							placeholder="Enter role name"
+							placeholder="Enter level name"
 						/>
 					</div>
 					<div className="w-full flex items-center justify-end">
 						<Button onClick={addLevel}>Add</Button>
 					</div>
+				</div>
+			</div>
+		</CustomModal>
+	);
+};
+
+const Modal = ({
+	open,
+	onClose,
+	levels,
+}: {
+	open: boolean;
+	onClose: () => void;
+	levels: { id: number; name: string }[];
+}) => {
+	const [editingLevelId, setEditingLevelId] = useState<number>(0);
+	const [newLevelName, setNewLevelName] = useState<string>("");
+
+	const deleteLevel = async (id: number) => {
+		try {
+			const response = await customAxios.delete(`/question-levels/${id}`);
+
+			if (response.status === 200) {
+				onClose();
+				toast.success(
+					`You have successfully deleted the ${
+						levels.find((level) => level.id === id)?.name
+					} level.`,
+				);
+			}
+		} catch (error: any) {
+			console.log(error.message);
+			toast.error("An error occurred.");
+		}
+	};
+
+	const updateLevel = async (id: number) => {
+		try {
+			const response = await customAxios.put(`/question-levels/${id}`, {
+				name: newLevelName,
+			});
+
+			if (response.status === 200) {
+				setEditingLevelId(0);
+				onClose();
+				toast.success("Level updated successfully.");
+			}
+		} catch (error: any) {
+			console.log(error.message);
+			toast.error("An error occurred.");
+		}
+	};
+
+	return (
+		<CustomModal size="w-[300px]" open={open} onClose={onClose}>
+			<div className="flex flex-col gap-4 w-full">
+				<h2 className="text-2xl">Level</h2>
+				<hr className="my-1" />
+				<div className="space-y-4">
+					{levels.map((level) => (
+						<div
+							key={level.id}
+							className="flex items-center justify-between gap-x-4"
+						>
+							{editingLevelId === level.id ? (
+								<Input
+									value={newLevelName}
+									onChange={(e) => setNewLevelName(e.target.value)}
+									className="w-full"
+								/>
+							) : (
+								<p>{level.name}</p>
+							)}
+							<div className="flex items-center gap-x-2">
+								{editingLevelId === level.id ? (
+									<>
+										<Button
+											onClick={() => {
+												setEditingLevelId(0);
+												setNewLevelName("");
+											}}
+											variant="ghost"
+											size={"icon"}
+										>
+											<X className="w-4 h-4" />
+										</Button>
+										<Button
+											onClick={() => updateLevel(level.id)}
+											variant="ghost"
+											size={"icon"}
+										>
+											<Check className="w-4 h-4" />
+										</Button>
+									</>
+								) : (
+									<>
+										<Button
+											onClick={() => {
+												setEditingLevelId(level.id);
+												setNewLevelName(level.name);
+											}}
+											variant="ghost"
+											size={"icon"}
+										>
+											<Edit className="w-4 h-4" />
+										</Button>
+
+										<Button
+											onClick={() => deleteLevel(level.id)}
+											variant="ghost"
+											size={"icon"}
+										>
+											<Trash className="w-4 h-4 text-red-400" />
+										</Button>
+									</>
+								)}
+							</div>
+						</div>
+					))}
 				</div>
 			</div>
 		</CustomModal>

@@ -210,6 +210,31 @@ const ExamDetail = () => {
 		});
 	};
 
+	const isDateWithinSemester = (
+		date: string,
+		semester: {
+			id: number;
+			semester: number;
+			first_year: string;
+			second_year: string;
+		},
+	) => {
+		const examDate = new Date(date);
+		let startDate, endDate;
+
+		if (semester.semester === 1) {
+			startDate = new Date(`${semester.first_year}-09-01`);
+			endDate = new Date(`${parseInt(semester.second_year) + 1}-01-31`);
+		} else if (semester.semester === 2) {
+			startDate = new Date(`${semester.second_year}-02-01`);
+			endDate = new Date(`${semester.second_year}-06-30`);
+		} else {
+			return false;
+		}
+
+		return examDate >= startDate && examDate <= endDate;
+	};
+
 	const handleSave = async () => {
 		try {
 			if (
@@ -234,6 +259,18 @@ const ExamDetail = () => {
 				toast.error(
 					`You can select a maximum of ${maxExamQuestion.value} questions.`,
 				);
+				return;
+			}
+
+			const selectedSemesterObj = semesters.find(
+				(semester) => semester.id === selectedSemester,
+			);
+
+			if (
+				selectedSemesterObj &&
+				!isDateWithinSemester(exam.examDate, selectedSemesterObj)
+			) {
+				toast.error("Exam date must be within the selected semester.");
 				return;
 			}
 
