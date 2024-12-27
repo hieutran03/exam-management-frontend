@@ -33,6 +33,7 @@ function App() {
 				<Route path="/teachers/:teacherId" element={<TeacherDetail />} />
 				<Route path="/teachers/role/:roleId" element={<RoleDetail />} />
 				<Route path="/exams" element={<Exams />} />
+				<Route path="/exams/:examId" element={<ExamDetail />} />
 				<Route path="/questions" element={<Questions />} />
 				<Route path="/questions/:questionId" element={<QuestionDetail />} />
 			</Route>

@@ -14,4 +14,7 @@ export { default as QuestionTable } from "./QuestionTable";
 export { default as TeacherTable } from "./TeacherTable";
 export { columnsTeacher } from "./TeacherColumn";
 
+export { default as ExamTable } from "./ExamTable";
+export { columnsExam } from "./ExamColumn";
+
 export { default as Header } from "./Header";
