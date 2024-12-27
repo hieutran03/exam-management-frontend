@@ -5,6 +5,7 @@ import {
 	FilePenLine,
 	GraduationCap,
 	MessageCircleQuestion,
+	Shapes,
 } from "lucide-react";
 
 import { NavMain, NavUser } from "@/components/custom";
@@ -27,6 +28,11 @@ const data = {
 			title: "Teachers",
 			url: "/teachers",
 			icon: GraduationCap,
+		},
+		{
+			title: "Classes",
+			url: "/classes",
+			icon: Shapes,
 		},
 		{
 			title: "Exams",

@@ -11,6 +11,8 @@ import {
 	RoleDetail,
 	QuestionDetail,
 	ExamDetail,
+	Classes,
+	ClassDetail,
 } from "@/pages";
 import { DefaultLayout } from "@/layout";
 import { AuthProtect } from "@/routes";
@@ -34,6 +36,8 @@ function App() {
 				<Route path="/teachers/role/:roleId" element={<RoleDetail />} />
 				<Route path="/exams" element={<Exams />} />
 				<Route path="/exams/:examId" element={<ExamDetail />} />
+				<Route path="/classes" element={<Classes />} />
+				<Route path="/classes/:classId/:courseId" element={<ClassDetail />} />
 				<Route path="/questions" element={<Questions />} />
 				<Route path="/questions/:questionId" element={<QuestionDetail />} />
 			</Route>
