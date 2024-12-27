@@ -25,22 +25,54 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
-import { Role, Permission, Teacher } from "@/interface";
+import { Role, Permission, Teacher, User } from "@/interface";
 import customAxios from "@/lib/customAxios";
-import { useSelector } from "react-redux";
-
-import { RootState } from "@/context/store";
 import { cn } from "@/lib/utils";
 import { NavigateFunction, useNavigate } from "react-router-dom";
 
 const Teachers = () => {
 	const [openModalRole, setOpenModalRole] = useState<boolean>(false);
 	const [openModalTeacher, setOpenModalTeacher] = useState<boolean>(false);
-	const user = useSelector((state: RootState) => state.auth.user);
 	const [teachers, setTeachers] = useState<Teacher[]>([]);
 	const [roles, setRoles] = useState<Role[]>([]);
 
+	const [user, setUser] = useState<User>({
+		id: 0,
+		name: "",
+		username: "",
+		role: {
+			id: 0,
+			name: "",
+			permissions: [],
+		},
+	});
+
 	const navigate: NavigateFunction = useNavigate();
+
+	useEffect(() => {
+		const getUser = async () => {
+			try {
+				const response = await customAxios.get("/auth/my-profile");
+
+				if (response.status === 200) {
+					setUser({
+						id: response.data.id,
+						name: response.data.name,
+						username: response.data.username,
+						role: {
+							id: response.data.rolePermission.id,
+							name: response.data.rolePermission.name,
+							permissions: response.data.rolePermission.permissions,
+						},
+					});
+				}
+			} catch (error: any) {
+				console.log(error.message);
+			}
+		};
+
+		getUser();
+	}, []);
 
 	useEffect(() => {
 		const getRoles = async () => {
@@ -58,7 +90,7 @@ const Teachers = () => {
 		getRoles();
 	}, []);
 
-	const isTeacherModify = user?.role.permissions.includes(
+	const isTeacherModify = user.role.permissions.includes(
 		Permission.TEACHER_MODIFY,
 	);
 
@@ -113,11 +145,11 @@ const Teachers = () => {
 				</div>
 			</div>
 			<Separator className="my-4" />
-			<div className="grid grid-cols-4 gap-10">
-				<div className="col-span-3">
+			<div className="grid grid-cols-1 lg:grid-cols-4 gap-10">
+				<div className="sm:col-span-3">
 					<TeacherTable data={teachers} />
 				</div>
-				<div className="col-span-1 px-4 mt-8">
+				<div className="lg:col-span-1 px-4 mt-8">
 					<Command className="border rounded-md">
 						<CommandInput placeholder="Search roles..." />
 						<CommandList>
@@ -188,6 +220,7 @@ const ModalRole = ({
 
 	const addRole = async () => {
 		try {
+			console.log(roleName);
 			if (roleName === "") {
 				throw new Error("Please enter role name");
 			}
@@ -308,7 +341,7 @@ const ModalTeacher = ({
 	};
 
 	return (
-		<CustomModal size="w-[450px]" open={open} onClose={onClose}>
+		<CustomModal size="w-[500px]" open={open} onClose={onClose}>
 			<div className="flex flex-col gap-4 w-full">
 				<h2 className="text-2xl">Add New Teacher</h2>
 				<hr className="my-1" />
@@ -338,7 +371,7 @@ const ModalTeacher = ({
 										<ChevronsUpDown className="opacity-50" />
 									</Button>
 								</PopoverTrigger>
-								<PopoverContent className="w-[200px] p-0 z-999">
+								<PopoverContent className="w-full p-0 z-999">
 									<Command>
 										<CommandInput placeholder="Search roles..." />
 										<CommandList>

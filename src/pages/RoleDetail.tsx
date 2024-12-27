@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { update } from "@/context/services/auth";
 import { RootState } from "@/context/store";
-import { Permission, RolePermission } from "@/interface";
+import { Permission, RolePermission, User } from "@/interface";
 import customAxios from "@/lib/customAxios";
 import { Icons } from "@/lib/icon";
 import { Edit, Ellipsis, X } from "lucide-react";
@@ -28,6 +28,16 @@ const RoleDetail = () => {
 	});
 	const { roleId } = useParams<{ roleId: string }>();
 	const permissionsList = Object.values(Permission);
+	const [user, setUser] = useState<User>({
+		id: 0,
+		name: "",
+		username: "",
+		role: {
+			id: 0,
+			name: "",
+			permissions: [],
+		},
+	});
 
 	const currentUser = useSelector((state: RootState) => state.auth.user);
 	const dispatch = useDispatch();
@@ -35,6 +45,19 @@ const RoleDetail = () => {
 	useEffect(() => {
 		const getRoleDetail = async () => {
 			try {
+				const s = await customAxios.get("/auth/my-profile");
+
+				setUser({
+					id: s.data.id,
+					name: s.data.name,
+					username: s.data.username,
+					role: {
+						id: s.data.rolePermission.id,
+						name: s.data.rolePermission.name,
+						permissions: s.data.rolePermission.permissions,
+					},
+				});
+
 				const response = await customAxios.get(`/roles/${roleId}`);
 
 				if (response.status === 200) {
@@ -125,25 +148,27 @@ const RoleDetail = () => {
 						<CardDescription className="text-center text-xl font-bold tracking-tight text-gray-700 ">
 							Role Details
 						</CardDescription>
-						<div className="absolute right-1 top-0">
-							{isEditing ? (
-								<Button
-									onClick={() => setIsEditing(false)}
-									variant={"ghost"}
-									size={"icon"}
-								>
-									<X className="w-5 h-5" />
-								</Button>
-							) : (
-								<Button
-									onClick={() => setIsEditing(true)}
-									variant={"ghost"}
-									size={"icon"}
-								>
-									<Edit className="w-5 h-5" />
-								</Button>
-							)}
-						</div>
+						{user.role.permissions.includes(Permission.TEACHER_MODIFY) && (
+							<div className="absolute right-1 top-0">
+								{isEditing ? (
+									<Button
+										onClick={() => setIsEditing(false)}
+										variant={"ghost"}
+										size={"icon"}
+									>
+										<X className="w-5 h-5" />
+									</Button>
+								) : (
+									<Button
+										onClick={() => setIsEditing(true)}
+										variant={"ghost"}
+										size={"icon"}
+									>
+										<Edit className="w-5 h-5" />
+									</Button>
+								)}
+							</div>
+						)}
 					</CardHeader>
 					<CardContent className="grid gap-4 py-2">
 						<div className="flex flex-col gap-y-2">
