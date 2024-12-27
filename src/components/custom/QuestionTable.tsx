@@ -128,7 +128,7 @@ const QuestionTable = ({ data }: QuestionTableProps) => {
 						{table.getHeaderGroups().map((headerGroup) => (
 							<TableRow
 								key={headerGroup.id}
-								className="grid grid-cols-13 w-full"
+								className="grid grid-cols-11 w-full"
 							>
 								{headerGroup.headers.map((header, index) => {
 									return (
@@ -161,7 +161,7 @@ const QuestionTable = ({ data }: QuestionTableProps) => {
 								<TableRow
 									key={row.id}
 									data-state={row.getIsSelected() && "selected"}
-									className="grid grid-cols-13 w-full items-center"
+									className="grid grid-cols-11 w-full items-center"
 								>
 									{row.getVisibleCells().map((cell, index) => (
 										<TableCell

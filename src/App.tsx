@@ -9,6 +9,8 @@ import {
 	Teachers,
 	TeacherDetail,
 	RoleDetail,
+	QuestionDetail,
+	ExamDetail,
 } from "@/pages";
 import { DefaultLayout } from "@/layout";
 import { AuthProtect } from "@/routes";
@@ -32,6 +34,7 @@ function App() {
 				<Route path="/teachers/role/:roleId" element={<RoleDetail />} />
 				<Route path="/exams" element={<Exams />} />
 				<Route path="/questions" element={<Questions />} />
+				<Route path="/questions/:questionId" element={<QuestionDetail />} />
 			</Route>
 			<Route path="*" element={<NotFound />} />
 		</Routes>
