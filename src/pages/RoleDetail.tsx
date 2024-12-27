@@ -132,7 +132,7 @@ const RoleDetail = () => {
 						<Icons.logo className="w-full h-full rounded-md  bg-slate-200 dark:bg-slate-700" />
 					</div>
 					<div className="space-y-1">
-						<p className="font-medium text-xl">Role</p>
+						<p className="font-medium text-xl">Role Detail</p>
 					</div>
 				</div>
 				<div className="flex items-center gap-x-4">

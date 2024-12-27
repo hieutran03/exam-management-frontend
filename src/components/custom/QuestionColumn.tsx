@@ -7,10 +7,11 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, ChevronsUpDown, Trash, Info } from "lucide-react";
-import { Question } from "@/interface";
+import { Permission, Question } from "@/interface";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useLayoutEffect, useState } from "react";
 import { NavigateFunction, useNavigate } from "react-router-dom";
+import customAxios from "@/lib/customAxios";
 
 export const columnsQuestion: ColumnDef<Question>[] = [
 	{
@@ -154,6 +155,25 @@ export const columnsQuestion: ColumnDef<Question>[] = [
 				const question = row.original;
 				const navigate: NavigateFunction = useNavigate();
 
+				const handleDelete = async () => {
+					try {
+						const user = await customAxios.get("/auth/my-profile");
+						const url = user.data.rolePermission.permissions.includes(
+							Permission.QUESTION_MODIFY,
+						)
+							? "/questions"
+							: "/my-questions";
+
+						const response = await customAxios.delete(`${url}/${question.id}`);
+
+						if (response.status === 200) {
+							navigate("/questions");
+						}
+					} catch (error: any) {
+						console.error(error);
+					}
+				};
+
 				return (
 					<>
 						<DropdownMenu>
@@ -183,7 +203,10 @@ export const columnsQuestion: ColumnDef<Question>[] = [
 									<span>Details</span>
 								</DropdownMenuItem>
 								<hr className="my-1" />
-								<DropdownMenuItem className="flex items-center gap-x-1 text-red-500 hover:!text-red-700 cursor-pointer">
+								<DropdownMenuItem
+									onClick={handleDelete}
+									className="flex items-center gap-x-1 text-red-500 hover:!text-red-700 cursor-pointer"
+								>
 									<Trash className="h-4 w-4" />
 									<span>Delete</span>
 								</DropdownMenuItem>

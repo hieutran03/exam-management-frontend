@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { update } from "@/context/services/auth";
 import { RootState } from "@/context/store";
-import { Role, User } from "@/interface";
+import { Permission, Role, User } from "@/interface";
 import customAxios from "@/lib/customAxios";
 import { Icons } from "@/lib/icon";
 import { Check, Ellipsis, X } from "lucide-react";
@@ -35,6 +35,16 @@ const TeacherDetail = () => {
 	const [isEditing, setIsEditing] = useState<boolean>(false);
 	const inputRef = useRef<ElementRef<"input">>(null);
 	const { teacherId } = useParams<{ teacherId: string }>();
+	const [user, setUser] = useState<User>({
+		id: 0,
+		name: "",
+		username: "",
+		role: {
+			id: 0,
+			name: "",
+			permissions: [],
+		},
+	});
 
 	const currentUser = useSelector((state: RootState) => state.auth.user);
 	const dispatch = useDispatch();
@@ -56,6 +66,29 @@ const TeacherDetail = () => {
 	}, []);
 
 	useEffect(() => {
+		const getUser = async () => {
+			try {
+				const response = await customAxios.get("/auth/my-profile");
+
+				if (response.status === 200) {
+					setUser({
+						id: response.data.id,
+						name: response.data.name,
+						username: response.data.username,
+						role: {
+							id: response.data.rolePermission.id,
+							name: response.data.rolePermission.name,
+							permissions: response.data.rolePermission.permissions,
+						},
+					});
+				}
+			} catch (error: any) {
+				console.log(error.message);
+			}
+		};
+
+		getUser();
+
 		const getTeacherDetail = async () => {
 			try {
 				const response = await customAxios.get(
@@ -183,6 +216,10 @@ const TeacherDetail = () => {
 		}
 	};
 
+	const isTeacherModify: boolean = user.role.permissions.includes(
+		Permission.TEACHER_MODIFY,
+	);
+
 	return (
 		<div className="w-full">
 			<div className="flex items-center justify-between">
@@ -191,7 +228,7 @@ const TeacherDetail = () => {
 						<Icons.logo className="w-full h-full rounded-md  bg-slate-200 dark:bg-slate-700" />
 					</div>
 					<div className="space-y-1">
-						<p className="font-medium text-xl">Teachers</p>
+						<p className="font-medium text-xl">Teacher Detail</p>
 					</div>
 				</div>
 				<div className="flex items-center gap-x-4">
@@ -214,9 +251,9 @@ const TeacherDetail = () => {
 								Teacher Username
 							</Label>
 
-							<Button variant={"ghost"} className="justify-start">
+							<div className="text-sm h-10 px-4 py-2 font-medium">
 								{teacher?.username}
-							</Button>
+							</div>
 						</div>
 						<div className="flex flex-col gap-y-2">
 							<Label className="text-base font-medium italic">
@@ -232,7 +269,7 @@ const TeacherDetail = () => {
 										name="inputValue"
 										className="p-[11px] rounded-md border border-gray-300 focus-visible:outline-none"
 									/>
-									<div className="absolute right-0 z-99 -bottom-7 flex items-center gap-x-1">
+									<div className="absolute top-12 right-0 z-99 -bottom-7 flex items-center gap-x-1">
 										<Button
 											onClick={disableEditing}
 											variant={"outline"}
@@ -251,6 +288,7 @@ const TeacherDetail = () => {
 								</div>
 							) : (
 								<Button
+									disabled={!isTeacherModify}
 									onClick={enableEditing}
 									variant={"ghost"}
 									className="justify-start"
@@ -265,6 +303,7 @@ const TeacherDetail = () => {
 							</Label>
 
 							<Button
+								disabled={!isTeacherModify}
 								onClick={() => {
 									setVisible(!visible);
 								}}
@@ -297,13 +336,12 @@ const TeacherDetail = () => {
 
 							<div className="flex flex-wrap gap-x-1">
 								{teacher?.role.permissions.map((permission) => (
-									<Button
+									<div
+										className="text-sm h-10 px-4 py-2 font-medium"
 										key={permission}
-										variant={"ghost"}
-										className="justify-start"
 									>
 										{permission.replace(/_/g, " ")}
-									</Button>
+									</div>
 								))}
 							</div>
 						</div>

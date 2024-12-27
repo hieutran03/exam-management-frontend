@@ -139,7 +139,7 @@ const QuestionDetail = () => {
 						<Icons.logo className="w-full h-full rounded-md  bg-slate-200 dark:bg-slate-700" />
 					</div>
 					<div className="space-y-1">
-						<p className="font-medium text-xl">Questions</p>
+						<p className="font-medium text-xl">Question Detail</p>
 					</div>
 				</div>
 				<div className="flex items-center gap-x-4">
@@ -213,7 +213,7 @@ const QuestionDetail = () => {
 									</Button>
 
 									{visibleCourse && (
-										<div className="absolute top-[68px] z-10 w-full h-[96px] overflow-y-auto flex-col flex bg-white rounded-md shadow-md p-2 space-y-1 border role-dropdown">
+										<div className="absolute top-[68px] z-10 w-full max-h-[96px] overflow-y-auto flex-col flex bg-white rounded-md shadow-md p-2 space-y-1 border role-dropdown">
 											{courses
 												.filter((l) => l.name !== question.level)
 												.map((l) => (
@@ -230,6 +230,12 @@ const QuestionDetail = () => {
 														{l.name}
 													</Button>
 												))}
+
+											{courses.length === 0 && (
+												<div className="text-center italic font-medium text-gray-500">
+													No courses found.
+												</div>
+											)}
 										</div>
 									)}
 								</>
@@ -254,7 +260,7 @@ const QuestionDetail = () => {
 									</Button>
 
 									{visibleLevel && (
-										<div className="absolute top-[68px] z-10 w-full h-[96px] overflow-y-auto flex-col flex bg-white rounded-md shadow-md p-2 space-y-1 border role-dropdown">
+										<div className="absolute top-[68px] z-10 w-full max-h-[96px] overflow-y-auto flex-col flex bg-white rounded-md shadow-md p-2 space-y-1 border role-dropdown">
 											{levels
 												.filter((l) => l.name !== question.level)
 												.map((l) => (
@@ -271,6 +277,12 @@ const QuestionDetail = () => {
 														{l.name}
 													</Button>
 												))}
+
+											{levels.length === 0 && (
+												<div className="text-center italic font-medium text-gray-500">
+													No levels found.
+												</div>
+											)}
 										</div>
 									)}
 								</>

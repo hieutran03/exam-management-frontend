@@ -7,9 +7,11 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, ChevronsUpDown, Trash, Info } from "lucide-react";
-import { Teacher } from "@/interface";
+import { Permission, Teacher, User } from "@/interface";
 import { Checkbox } from "@/components/ui/checkbox";
 import { NavigateFunction, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import customAxios from "@/lib/customAxios";
 
 export const columnsTeacher: ColumnDef<Teacher>[] = [
 	{
@@ -96,8 +98,61 @@ export const columnsTeacher: ColumnDef<Teacher>[] = [
 		enableHiding: false,
 		cell: ({ row }) => {
 			const ActionCell = () => {
-				const user = row.original;
+				const teacher = row.original;
 				const navigate: NavigateFunction = useNavigate();
+				const [user, setUser] = useState<User>({
+					id: 0,
+					name: "",
+					username: "",
+					role: {
+						id: 0,
+						name: "",
+						permissions: [],
+					},
+				});
+
+				useEffect(() => {
+					const getUser = async () => {
+						try {
+							const response = await customAxios.get("/auth/my-profile");
+
+							if (response.status === 200) {
+								setUser({
+									id: response.data.id,
+									name: response.data.name,
+									username: response.data.username,
+									role: {
+										id: response.data.rolePermission.id,
+										name: response.data.rolePermission.name,
+										permissions: response.data.rolePermission.permissions,
+									},
+								});
+							}
+						} catch (error: any) {
+							console.log(error.message);
+						}
+					};
+
+					getUser();
+				}, []);
+
+				const isTeacherModify: boolean = user.role.permissions.includes(
+					Permission.TEACHER_MODIFY,
+				);
+
+				const handleDelete = async () => {
+					try {
+						const response = await customAxios.delete(
+							`/teachers/${teacher.id}`,
+						);
+
+						if (response.status === 204) {
+							navigate("/teachers");
+						}
+					} catch (error: any) {
+						console.log(error.message);
+					}
+				};
 
 				return (
 					<DropdownMenu>
@@ -114,23 +169,30 @@ export const columnsTeacher: ColumnDef<Teacher>[] = [
 							<DropdownMenuItem
 								className="cursor-pointer"
 								onClick={() =>
-									navigator.clipboard.writeText(user.id.toString())
+									navigator.clipboard.writeText(teacher.id.toString())
 								}
 							>
 								Copy ID
 							</DropdownMenuItem>
 							<DropdownMenuItem
-								onClick={() => navigate(`/teachers/${user.id}`)}
+								onClick={() => navigate(`/teachers/${teacher.id}`)}
 								className="flex items-center gap-x-1 cursor-pointer"
 							>
 								<Info className="h-4 w-4" />
 								<span>Details</span>
 							</DropdownMenuItem>
-							<hr className="my-1" />
-							<DropdownMenuItem className="flex items-center gap-x-1 text-red-500 hover:!text-red-700 cursor-pointer">
-								<Trash className="h-4 w-4" />
-								<span>Delete</span>
-							</DropdownMenuItem>
+							{isTeacherModify && (
+								<>
+									<hr className="my-1" />
+									<DropdownMenuItem
+										onClick={handleDelete}
+										className="flex items-center gap-x-1 text-red-500 hover:!text-red-700 cursor-pointer"
+									>
+										<Trash className="h-4 w-4" />
+										<span>Delete</span>
+									</DropdownMenuItem>
+								</>
+							)}
 						</DropdownMenuContent>
 					</DropdownMenu>
 				);
