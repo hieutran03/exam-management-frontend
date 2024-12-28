@@ -17,7 +17,7 @@ import {
 	PopoverTrigger,
 } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
-import { Teacher } from "@/interface";
+import { Permission, Teacher, User } from "@/interface";
 import { Class } from "@/interface/Class";
 import customAxios from "@/lib/customAxios";
 import { Icons } from "@/lib/icon";
@@ -38,6 +38,16 @@ const Classes = () => {
 	const [selectCourse, setSelectCourse] = useState<number>(1);
 	const [openModal, setOpenModal] = useState<boolean>(false);
 	const [openModalClass, setOpenModalClass] = useState<boolean>(false);
+	const [user, setUser] = useState<User>({
+		id: 0,
+		name: "",
+		username: "",
+		role: {
+			id: 0,
+			name: "",
+			permissions: [],
+		},
+	});
 
 	useEffect(() => {
 		const getCourses = async () => {
@@ -51,6 +61,28 @@ const Classes = () => {
 				console.log(error);
 			}
 		};
+		const getUser = async () => {
+			try {
+				const response = await customAxios.get("/auth/my-profile");
+
+				if (response.status === 200) {
+					setUser({
+						id: response.data.id,
+						name: response.data.name,
+						username: response.data.username,
+						role: {
+							id: response.data.rolePermission.id,
+							name: response.data.rolePermission.name,
+							permissions: response.data.rolePermission.permissions,
+						},
+					});
+				}
+			} catch (error: any) {
+				console.log(error.message);
+			}
+		};
+
+		getUser();
 
 		getCourses();
 	}, []);
@@ -80,6 +112,10 @@ const Classes = () => {
 		getClasses();
 	}, [selectCourse]);
 
+	const isTeacherModify: boolean = user.role.permissions.includes(
+		Permission.TEACHER_MODIFY,
+	);
+
 	return (
 		<div className="w-full">
 			<div className="flex items-center justify-between">
@@ -97,13 +133,15 @@ const Classes = () => {
 					</div>
 				</div>
 				<div className="flex items-center gap-x-4">
-					<Button
-						onClick={() => setOpenModalClass(true)}
-						variant="ghost"
-						size={"icon"}
-					>
-						<SquarePlus className="w-5 h-5" />
-					</Button>
+					{isTeacherModify && (
+						<Button
+							onClick={() => setOpenModalClass(true)}
+							variant="ghost"
+							size={"icon"}
+						>
+							<SquarePlus className="w-5 h-5" />
+						</Button>
+					)}
 					<Button variant="secondary" size={"icon"}>
 						<Ellipsis className="w-5 h-5" />
 					</Button>
@@ -114,13 +152,15 @@ const Classes = () => {
 				<div className="sm:col-span-1 space-y-1">
 					<div className="flex items-center justify-between gap-x-2 mt-5">
 						<p className="text-lg font-medium italic">Courses</p>
-						<Button
-							onClick={() => setOpenModal(true)}
-							variant={"ghost"}
-							size={"icon"}
-						>
-							<Plus className="w-5 h-5" />
-						</Button>
+						{isTeacherModify && (
+							<Button
+								onClick={() => setOpenModal(true)}
+								variant={"ghost"}
+								size={"icon"}
+							>
+								<Plus className="w-5 h-5" />
+							</Button>
+						)}
 					</div>
 					<div className="max-h-[300px] w-full overflow-y-auto space-y-2 border px-3 py-1.5 rounded-md">
 						{courses.map((course) => (

@@ -7,9 +7,11 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, ChevronsUpDown, Trash, Info } from "lucide-react";
-import { Class } from "@/interface";
+import { Class, Permission, User } from "@/interface";
 import { Checkbox } from "@/components/ui/checkbox";
 import { NavigateFunction, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import customAxios from "@/lib/customAxios";
 
 export const columnsClass: ColumnDef<Class>[] = [
 	{
@@ -99,11 +101,51 @@ export const columnsClass: ColumnDef<Class>[] = [
 				const classObj = row.original;
 				const navigate: NavigateFunction = useNavigate();
 
+				const [user, setUser] = useState<User>({
+					id: 0,
+					name: "",
+					username: "",
+					role: {
+						id: 0,
+						name: "",
+						permissions: [],
+					},
+				});
+
+				useEffect(() => {
+					const getUser = async () => {
+						try {
+							const response = await customAxios.get("/auth/my-profile");
+
+							if (response.status === 200) {
+								setUser({
+									id: response.data.id,
+									name: response.data.name,
+									username: response.data.username,
+									role: {
+										id: response.data.rolePermission.id,
+										name: response.data.rolePermission.name,
+										permissions: response.data.rolePermission.permissions,
+									},
+								});
+							}
+						} catch (error: any) {
+							console.log(error.message);
+						}
+					};
+
+					getUser();
+				}, []);
+				const isTeacherModify: boolean = user.role.permissions.includes(
+					Permission.TEACHER_MODIFY,
+				);
+
 				return (
 					<>
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
 								<Button
+									disabled={!isTeacherModify}
 									variant="ghost"
 									className="h-8 w-8 p-0 focus-visible:ring-0 focus-visible:ring-offset-0"
 								>

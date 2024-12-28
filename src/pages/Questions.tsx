@@ -453,7 +453,9 @@ const Modal = ({
 									className="w-full"
 								/>
 							) : (
-								<p>{level.name}</p>
+								<p className="font-medium first-letter:uppercase">
+									{level.name}
+								</p>
 							)}
 							<div className="flex items-center gap-x-2">
 								{editingLevelId === level.id ? (
