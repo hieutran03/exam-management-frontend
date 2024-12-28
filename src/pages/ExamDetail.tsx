@@ -24,7 +24,7 @@ const ExamDetail = () => {
 	const { examId } = useParams<{ examId: string }>();
 	const [isEditing, setIsEditing] = useState<boolean>(false);
 	const [exam, setExam] = useState<Exam>({
-		id: "",
+		id: 0,
 		examDate: "",
 		time: 0,
 		totalScore: 0,

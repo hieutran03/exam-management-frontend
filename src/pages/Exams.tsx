@@ -97,7 +97,7 @@ const Exams = () => {
 				const response = await customAxios.get("/parameter");
 
 				if (response.status === 200) {
-					setParameters(response.data);
+					setParameters(response.data.sort((a: any, b: any) => a.id - b.id));
 				}
 			} catch (error: any) {
 				console.error(error);
@@ -193,7 +193,8 @@ const ModalExams = ({
 	const [selectedSemester, setSelectedSemester] = useState<number>(0);
 	const [selectedQuestions, setSelectedQuestions] = useState<number[]>([]);
 	const [examDate, setExamDate] = useState<string>("");
-	const [examTime, setExamTime] = useState<number>();
+	const [examTime, setExamTime] = useState<string>("");
+	const [totalScore, setTotalScore] = useState<string>("");
 
 	const [visibleCourses, setVisibleCourses] = useState<boolean>(false);
 	const [visibleSemesters, setVisibleSemesters] = useState<boolean>(false);
@@ -345,23 +346,36 @@ const ModalExams = ({
 				return;
 			}
 
+			const minExamScore = parameters.find((p) => p.name === "min_exam_score");
+			const maxExamScore = parameters.find((p) => p.name === "max_exam_score");
+
+			if (minExamScore && Number(totalScore) < minExamScore.value) {
+				toast.error(`Minimum exam score is ${minExamScore.value}.`);
+				return;
+			}
+
+			if (maxExamScore && Number(totalScore) > maxExamScore.value) {
+				toast.error(`Maximum exam score is ${maxExamScore.value}.`);
+				return;
+			}
+
 			const maxExamTime = parameters.find((p) => p.name === "max_exam_time");
 			const minExamTime = parameters.find((p) => p.name === "min_exam_time");
 
-			if (maxExamTime && examTime > maxExamTime.value) {
+			if (maxExamTime && Number(examTime) > maxExamTime.value) {
 				toast.error(`Maximum exam time is ${maxExamTime.value} minutes.`);
 				return;
 			}
 
-			if (minExamTime && examTime < minExamTime.value) {
+			if (minExamTime && Number(examTime) < minExamTime.value) {
 				toast.error(`Minimum exam time is ${minExamTime.value} minutes.`);
 				return;
 			}
 
 			const response = await customAxios.post("/exams", {
 				exam_date: examDate,
-				time: examTime,
-				total_score: 10,
+				time: Number(examTime),
+				total_score: Number(totalScore),
 				course_id: selectedCourse,
 				semester_school_year_id: selectedSemester,
 				question_ids: selectedQuestions,
@@ -495,43 +509,54 @@ const ModalExams = ({
 							</Popover>
 						</div>
 					</div>
-					<div className="flex flex-col space-y-2 w-full relative">
-						<Label>Question</Label>
-						<Button
-							onClick={() => setVisibleQuestions(true)}
-							variant="outline"
-							disabled={!selectedCourse}
-						>
-							Select questions
-						</Button>
-						{visibleQuestions && (
-							<div className="absolute max-h-[150px] overflow-y-auto top-[55px] z-10 w-full bg-white rounded-md shadow-md p-2 space-y-1 border role-dropdown">
-								{questions.map((question) => (
-									<div
-										onClick={() => handleSelectQuestion(question.id)}
-										className="font-medium flex items-center gap-x-2 italic px-2 py-1 hover:bg-gray-100 transition cursor-pointer rounded-md"
-										key={question.id}
-									>
-										{question.content}
+					<div className="flex items-center gap-x-4">
+						<div className="flex flex-col space-y-2 w-full relative">
+							<Label>Question</Label>
+							<Button
+								onClick={() => setVisibleQuestions(true)}
+								variant="outline"
+								disabled={!selectedCourse}
+							>
+								Select questions
+							</Button>
+							{visibleQuestions && (
+								<div className="absolute max-h-[150px] overflow-y-auto top-[55px] z-10 w-full bg-white rounded-md shadow-md p-2 space-y-1 border role-dropdown">
+									{questions.map((question) => (
+										<div
+											onClick={() => handleSelectQuestion(question.id)}
+											className="font-medium flex items-center gap-x-2 italic px-2 py-1 hover:bg-gray-100 transition cursor-pointer rounded-md"
+											key={question.id}
+										>
+											{question.content}
 
-										<Check
-											className={cn(
-												"ml-auto",
-												selectedQuestions.includes(question.id)
-													? "opacity-100"
-													: "opacity-0",
-											)}
-										/>
-									</div>
-								))}
+											<Check
+												className={cn(
+													"ml-auto",
+													selectedQuestions.includes(question.id)
+														? "opacity-100"
+														: "opacity-0",
+												)}
+											/>
+										</div>
+									))}
 
-								{questions.length === 0 && (
-									<div className="text-center italic font-medium text-gray-500">
-										No questions found.
-									</div>
-								)}
-							</div>
-						)}
+									{questions.length === 0 && (
+										<div className="text-center italic font-medium text-gray-500">
+											No questions found.
+										</div>
+									)}
+								</div>
+							)}
+						</div>
+						<div className="space-y-2 w-full">
+							<Label htmlFor="totalScore">Total Score</Label>
+							<Input
+								type="text"
+								value={totalScore}
+								onChange={(e) => setTotalScore(e.target.value)}
+								id="examTime"
+							/>
+						</div>
 					</div>
 					<div className="flex items-center gap-x-4">
 						<div className="space-y-2 w-full">
@@ -546,9 +571,9 @@ const ModalExams = ({
 						<div className="space-y-2 w-full">
 							<Label htmlFor="examTime">Exam Time</Label>
 							<Input
-								type="number"
+								type="text"
 								defaultValue={examTime}
-								onChange={(e) => setExamTime(parseInt(e.target.value))}
+								onChange={(e) => setExamTime(e.target.value)}
 								id="examTime"
 							/>
 						</div>
@@ -623,7 +648,7 @@ const ModalParameters = ({
 									}
 								/>
 							) : (
-								<p>
+								<p className="font-medium first-letter:uppercase">
 									{parameter.name.replace(/_/g, " ")}: {parameter.value}
 								</p>
 							)}

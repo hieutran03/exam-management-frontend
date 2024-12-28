@@ -1,6 +1,7 @@
 export { default as Register } from "./Register";
 export { default as Login } from "./Login";
 export { default as Home } from "./Home";
+export { default as ScoreDetail } from "./ScoreDetail";
 export { default as Exams } from "./Exams";
 export { default as ExamDetail } from "./ExamDetail";
 export { default as Classes } from "./Classes";
@@ -11,3 +12,5 @@ export { default as TeacherDetail } from "./TeacherDetail";
 export { default as RoleDetail } from "./RoleDetail";
 export { default as QuestionDetail } from "./QuestionDetail";
 export { default as NotFound } from "./NotFound";
+export { default as Report } from "./Report";
+export { default as ReportDetail } from "./ReportDetail";

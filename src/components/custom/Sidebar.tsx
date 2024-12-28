@@ -2,6 +2,7 @@ import * as React from "react";
 import { useLocation } from "react-router-dom";
 import {
 	BookOpenCheck,
+	Clipboard,
 	FilePenLine,
 	GraduationCap,
 	MessageCircleQuestion,
@@ -43,6 +44,11 @@ const data = {
 			title: "Questions",
 			url: "/questions",
 			icon: MessageCircleQuestion,
+		},
+		{
+			title: "Reports",
+			url: "/reports",
+			icon: Clipboard,
 		},
 	],
 };
